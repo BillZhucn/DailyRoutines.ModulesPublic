@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 using DailyRoutines.Abstracts;
 using DailyRoutines.Infos;
 using DailyRoutines.Managers;
@@ -137,8 +136,7 @@ public unsafe class AutoCountPlayers : DailyModuleBase
                               .Append($" {playerAround.ClassJob.Value.Name})")
                               .Add(new NewLinePayload())
                               .Append("     ")
-                              .Append(SeString.CreateMapLink(DService.ClientState.TerritoryType,
-                                                             DService.ClientState.MapId, mapPos.X, mapPos.Y))
+                              .Append(SeString.CreateMapLink(GameState.TerritoryType, GameState.Map, mapPos.X, mapPos.Y))
                               .Build();
                 Chat(message);
             }
@@ -220,7 +218,7 @@ public unsafe class AutoCountPlayers : DailyModuleBase
         if (GameState.TerritoryIntendedUse == 61)
             Entry.Shown = true;
         else
-            Entry.Shown = !DService.Condition[ConditionFlag.InCombat];
+            Entry.Shown = !DService.Condition[ConditionFlag.InCombat] || GameState.IsInPVPArea;
         
         if (!Entry.Shown)
         {
@@ -242,20 +240,37 @@ public unsafe class AutoCountPlayers : DailyModuleBase
             return;
         }
         
-        var tooltip = new StringBuilder();
+        var tooltip = new SeStringBuilder();
 
         if (PlayersManager.PlayersTargetingMe.Count > 0)
         {
-            tooltip.AppendLine($"{GetLoc("AutoCountPlayers-PlayersTargetingMe")}:");
-            PlayersManager.PlayersTargetingMe.ForEach(info => 
-                tooltip.AppendLine($"{info.Player.Name} ({info.Player.ClassJob.Value.Name.ExtractText()})"));
-            tooltip.AppendLine(string.Empty);
+            tooltip.AddUiForeground(32)
+                   .AddText($"{GetLoc("AutoCountPlayers-PlayersTargetingMe")}")
+                   .AddUiForegroundOff()
+                   .Add(NewLinePayload.Payload);
+            
+            PlayersManager.PlayersTargetingMe.ForEach(info =>
+                                                          tooltip.AddText($"{info.Player.Name} (")
+                                                                 .AddIcon(info.Player.ClassJob.Value.ToBitmapFontIcon())
+                                                                 .AddText($"{info.Player.ClassJob.Value.Name.ExtractText()})")
+                                                                 .Add(NewLinePayload.Payload));
         }
+
+        tooltip.AddUiForeground(32)
+               .AddText($"{GetLoc("AutoCountPlayers-PlayersAroundInfo")}")
+               .AddUiForegroundOff()
+               .Add(NewLinePayload.Payload);
         
-        tooltip.AppendLine($"{GetLoc("AutoCountPlayers-PlayersAroundInfo")}:");
-        characters.ForEach(x => tooltip.AppendLine($"{x.Name} ({x.ClassJob.Value.Name.ExtractText()})"));
+        characters.ForEach(info => tooltip.AddText($"{info.Name} (")
+                                          .AddIcon(info.ClassJob.Value.ToBitmapFontIcon())
+                                          .AddText($"{info.ClassJob.Value.Name.ExtractText()})")
+                                          .Add(NewLinePayload.Payload));
         
-        Entry.Tooltip = tooltip.ToString().Trim();
+        var message = tooltip.Build();
+        if (message.Payloads.Last() is NewLinePayload)
+            message.Payloads.RemoveAt(message.Payloads.Count - 1);
+        
+        Entry.Tooltip = message;
     }
 
     private static void OnPlayersTargetingMeUpdate(IReadOnlyList<PlayerTargetingInfo> targetingPlayersInfo)
