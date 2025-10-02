@@ -1,0 +1,94 @@
+using DailyRoutines.Abstracts;
+using DailyRoutines.Infos;
+using DailyRoutines.Managers;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game;
+
+namespace DailyRoutines.ModulesPublic;
+
+public class CancelMountCast : DailyModuleBase
+{
+    public override ModuleInfo Info { get; } = new()
+    {
+        Title = GetLoc("CancelMountCastTitle"),
+        Description = GetLoc("CancelMountCastDescription"),
+        Category = ModuleCategories.Action,
+        Author = ["Bill"],
+        ModulesRecommend = ["BetterMountRoulette"]
+    };
+
+    private static Config ModuleConfig = null!;
+
+    protected override void Init()
+    {
+        ModuleConfig = LoadConfig<Config>() ?? new();
+
+        UseActionManager.RegPreUseAction(OnPreUseAction);
+        DService.Condition.ConditionChange += OnConditionChanged;
+    }
+
+    protected override void ConfigUI()
+    {
+        if (ImGui.Checkbox(GetLoc("CancelMountCast-ClickToCancel"), ref ModuleConfig.ClickToCancel))
+            SaveConfig(ModuleConfig);
+        if (ImGui.Checkbox(GetLoc("CancelMountCast-MoveToCancel"), ref ModuleConfig.MoveToCancel))
+            SaveConfig(ModuleConfig);
+    }
+
+    private void OnConditionChanged(ConditionFlag flag, bool value)
+    {
+        if (flag != ConditionFlag.Casting) return;
+
+        if (value && ModuleConfig.MoveToCancel)
+            FrameworkManager.Register(OnUpdate);
+        else
+            FrameworkManager.Unregister(OnUpdate);
+    }
+
+    private static void OnPreUseAction(
+        ref bool isPrevented,
+        ref ActionType actionType,
+        ref uint actionID,
+        ref ulong targetID,
+        ref uint extraParam,
+        ref ActionManager.UseActionMode queueState,
+        ref uint comboRouteID)
+    {
+        if (!ModuleConfig.ClickToCancel || !IsCasting) return;
+
+        var player = DService.ObjectTable.LocalPlayer;
+        if (player.CastActionType != ActionType.Mount && player.CastActionId != 9) return;
+        
+        ExecuteCancelCast();
+    }
+
+    private void OnUpdate(IFramework _)
+    {
+        if (!LocalPlayerState.IsMoving) return;
+        
+        var player = DService.ObjectTable.LocalPlayer;
+        if (player.CastActionType != ActionType.Mount && player.CastActionId != 9) return;
+        
+        ExecuteCancelCast();
+    }
+
+    private static void ExecuteCancelCast()
+    {
+        if (Throttler.Throttle("CancelMountCast-CancelCast", 100))
+            ExecuteCommandManager.ExecuteCommand(ExecuteCommandFlag.CancelCast);
+    }
+
+    protected override void Uninit()
+    {
+        UseActionManager.Unreg(OnPreUseAction);
+        DService.Condition.ConditionChange -= OnConditionChanged;
+        FrameworkManager.Unregister(OnUpdate);
+    }
+
+    private class Config : ModuleConfiguration
+    {
+        public bool ClickToCancel = true;
+        public bool MoveToCancel;
+    }
+}
