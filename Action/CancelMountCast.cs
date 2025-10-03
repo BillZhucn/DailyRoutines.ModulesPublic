@@ -24,6 +24,7 @@ public class CancelMountCast : DailyModuleBase
         ModuleConfig = LoadConfig<Config>() ?? new();
         
         DService.Condition.ConditionChange += OnConditionChanged;
+        UseActionManager.RegPreUseAction(OnPreUseAction);
     }
 
     protected override void ConfigUI()
@@ -39,14 +40,6 @@ public class CancelMountCast : DailyModuleBase
     private void OnConditionChanged(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.Casting) return;
-
-        if (value && ModuleConfig.ClickToCancel)
-        {
-            UseActionManager.Unreg(OnPreUseAction);
-            UseActionManager.RegPreUseAction(OnPreUseAction);
-        }
-        else
-            UseActionManager.Unreg(OnPreUseAction);
         
         if (value && 
             (ModuleConfig.MoveToCancel || ModuleConfig.JumpToCancel))
@@ -67,6 +60,8 @@ public class CancelMountCast : DailyModuleBase
         ref ActionManager.UseActionMode queueState,
         ref uint comboRouteID)
     {
+        if (!ModuleConfig.ClickToCancel || !IsCasting) return;
+        
         var player = DService.ObjectTable.LocalPlayer;
         if (player.CastActionType != ActionType.Mount ||
             (player.CastActionType == ActionType.GeneralAction && player.CastActionId != 9)) return;
@@ -76,16 +71,16 @@ public class CancelMountCast : DailyModuleBase
 
     private void OnUpdate(IFramework _)
     {
-        if (ModuleConfig.MoveToCancel && !LocalPlayerState.IsMoving) return;
-        if (ModuleConfig.JumpToCancel && 
-            !DService.Condition.Any(ConditionFlag.Jumping, ConditionFlag.Jumping61)) return;
-        
+        if (!(ModuleConfig.MoveToCancel && LocalPlayerState.IsMoving) &&
+            !(ModuleConfig.JumpToCancel && 
+              DService.Condition.Any(ConditionFlag.Jumping, ConditionFlag.Jumping61)))
+            return;
+
         var player = DService.ObjectTable.LocalPlayer;
         if (player.CastActionType != ActionType.Mount ||
-                (player.CastActionType == ActionType.GeneralAction && player.CastActionId != 9)) return;
+            (player.CastActionType == ActionType.GeneralAction && player.CastActionId != 9)) return;
 
         ExecuteCancelCast();
-        
     }
 
     private static void ExecuteCancelCast()
@@ -96,8 +91,8 @@ public class CancelMountCast : DailyModuleBase
 
     protected override void Uninit()
     {
-        UseActionManager.Unreg(OnPreUseAction);
         DService.Condition.ConditionChange -= OnConditionChanged;
+        UseActionManager.Unreg(OnPreUseAction);
         FrameworkManager.Unregister(OnUpdate);
     }
 

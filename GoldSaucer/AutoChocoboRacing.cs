@@ -8,7 +8,6 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using Lumina.Excel.Sheets;
 
 namespace DailyRoutines.ModulesPublic;
 
@@ -38,7 +37,6 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
     private static byte Rank => RaceChocoboManager.Instance()->Rank;
     private static byte AbilityHereditary => RaceChocoboManager.Instance()->AbilityHereditary;
     private static byte AbilityLearned => RaceChocoboManager.Instance()->AbilityLearned;
-    private bool AbilityUsed;
 
     protected override void Init()
     {
@@ -51,24 +49,27 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
 
     protected override void ConfigUI()
     {
-        ImGui.Text(GetLoc($"AutoChocoboRacing-Rank{Rank}"));
-        ImGui.Text(GetLoc($"AutoChocoboRacing-AbilityHereditary{
-            GetChocoboRaceAbilityName(AbilityHereditary)}"));
-        ImGui.Text(GetLoc($"AutoChocoboRacing-AbilityLearned{
-            GetChocoboRaceAbilityName(AbilityLearned)}"));
-        
-        ImGui.NewLine();
-        
-        if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-OptimisedRacing"), ref ModuleConfig.OptimisedRacing))
+        var notHereditaryOptimised = AbilityHereditary != 58; // 超级冲刺
+        var notLearnedOptimised = AbilityLearned != 30;     // 体力消耗降低III
+        var notRankMax = Rank != 50;                           //满级
+        if (notHereditaryOptimised || notLearnedOptimised || notRankMax)
         {
-            if (AbilityHereditary != 58 || // 超级冲刺
-                AbilityLearned != 30 ||    // 体力消耗降低III
-                Rank < 50)                 //满级
-            {
-                Chat(GetLoc("AutoChocoboRacing-NotOptimised"));
-                ModuleConfig.OptimisedRacing = false;
-            }
-            SaveConfig(ModuleConfig);
+            ImGui.Text(GetLoc("AutoChocoboRacing-OptimisedRacingWarning"));
+
+            var unmet = new List<string>();
+            if (notHereditaryOptimised)
+                unmet.Add(GetLoc($"AutoChocoboRacing-NeedHereditary{LuminaWrapper.GetChocoboRaceAbilityName(58)}"));
+            if (notLearnedOptimised)
+                unmet.Add(GetLoc($"AutoChocoboRacing-NeedLearned{LuminaWrapper.GetChocoboRaceAbilityName(30)}"));
+            if (notRankMax)
+                unmet.Add(GetLoc("AutoChocoboRacing-NeedMaxRank"));
+            
+            ImGui.TextColored(KnownColor.Red.ToVector4(), string.Join(", ", unmet));
+        }
+        else
+        {
+            if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-OptimisedRacing"), ref ModuleConfig.OptimisedRacing))
+                SaveConfig(ModuleConfig);
         }
 
         ImGui.NewLine();
@@ -92,7 +93,7 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
 
         if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-AutoExit"), ref ModuleConfig.AutoExit))
             SaveConfig(ModuleConfig);
-        if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-StopAtMaxRank"), ref ModuleConfig.StopAtMaxRank))
+        if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-StopAtMaxRank"), ref ModuleConfig.StopAtRetireRank))
             SaveConfig(ModuleConfig);
         if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-AlwaysRun"), ref ModuleConfig.AlwaysRun))
             SaveConfig(ModuleConfig);
@@ -120,12 +121,6 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
 
     private void OnLogin() => 
         ExecuteCommandManager.ExecuteCommand(ExecuteCommandFlag.RequestGSChocobo);
-    
-    public static string GetChocoboRaceAbilityName(uint rowID)
-    {
-        ChocoboRaceAbility chocoboRaceAbility;
-        return !LuminaGetter.TryGetRow<ChocoboRaceAbility>(rowID, out chocoboRaceAbility) ? string.Empty : chocoboRaceAbility.Name.ExtractText();
-    }
 
     private void OnConditionChanged(ConditionFlag flag, bool value)
     {
@@ -144,7 +139,7 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
             SetMoving(false);
             SlowDown(false);
 
-            if (ModuleConfig.StopAtMaxRank && 
+            if (ModuleConfig.StopAtRetireRank && 
                 !ModuleConfig.OptimisedRacing &&
                 Rank >= 40)
             {
@@ -245,7 +240,7 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
         public bool IsEnabled;
         public bool AutoExit = true;
         public bool AlwaysRun = true;
-        public bool StopAtMaxRank = true;
+        public bool StopAtRetireRank = true;
         public bool OptimisedRacing;
 
         public ushort Route = 19;
