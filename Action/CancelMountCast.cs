@@ -1,5 +1,4 @@
 using DailyRoutines.Abstracts;
-using DailyRoutines.Infos;
 using DailyRoutines.Managers;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Plugin.Services;
@@ -23,8 +22,7 @@ public class CancelMountCast : DailyModuleBase
     protected override void Init()
     {
         ModuleConfig = LoadConfig<Config>() ?? new();
-
-        UseActionManager.RegPreUseAction(OnPreUseAction);
+        
         DService.Condition.ConditionChange += OnConditionChanged;
     }
 
@@ -34,14 +32,28 @@ public class CancelMountCast : DailyModuleBase
             SaveConfig(ModuleConfig);
         if (ImGui.Checkbox(GetLoc("CancelMountCast-MoveToCancel"), ref ModuleConfig.MoveToCancel))
             SaveConfig(ModuleConfig);
+        if (ImGui.Checkbox(GetLoc("CancelMountCast-JumpToCancel"), ref ModuleConfig.JumpToCancel))
+            SaveConfig(ModuleConfig);
     }
 
     private void OnConditionChanged(ConditionFlag flag, bool value)
     {
         if (flag != ConditionFlag.Casting) return;
 
-        if (value && ModuleConfig.MoveToCancel)
+        if (value && ModuleConfig.ClickToCancel)
+        {
+            UseActionManager.Unreg(OnPreUseAction);
+            UseActionManager.RegPreUseAction(OnPreUseAction);
+        }
+        else
+            UseActionManager.Unreg(OnPreUseAction);
+        
+        if (value && 
+            (ModuleConfig.MoveToCancel || ModuleConfig.JumpToCancel))
+        {
+            FrameworkManager.Unregister(OnUpdate);
             FrameworkManager.Register(OnUpdate);
+        }
         else
             FrameworkManager.Unregister(OnUpdate);
     }
@@ -55,22 +67,25 @@ public class CancelMountCast : DailyModuleBase
         ref ActionManager.UseActionMode queueState,
         ref uint comboRouteID)
     {
-        if (!ModuleConfig.ClickToCancel || !IsCasting) return;
-
         var player = DService.ObjectTable.LocalPlayer;
-        if (player.CastActionType != ActionType.Mount && player.CastActionId != 9) return;
+        if (player.CastActionType != ActionType.Mount ||
+            (player.CastActionType == ActionType.GeneralAction && player.CastActionId != 9)) return;
         
         ExecuteCancelCast();
     }
 
     private void OnUpdate(IFramework _)
     {
-        if (!LocalPlayerState.IsMoving) return;
+        if (ModuleConfig.MoveToCancel && !LocalPlayerState.IsMoving) return;
+        if (ModuleConfig.JumpToCancel && 
+            !DService.Condition.Any(ConditionFlag.Jumping, ConditionFlag.Jumping61)) return;
         
         var player = DService.ObjectTable.LocalPlayer;
-        if (player.CastActionType != ActionType.Mount && player.CastActionId != 9) return;
-        
+        if (player.CastActionType != ActionType.Mount ||
+                (player.CastActionType == ActionType.GeneralAction && player.CastActionId != 9)) return;
+
         ExecuteCancelCast();
+        
     }
 
     private static void ExecuteCancelCast()
@@ -90,5 +105,6 @@ public class CancelMountCast : DailyModuleBase
     {
         public bool ClickToCancel = true;
         public bool MoveToCancel;
+        public bool JumpToCancel;
     }
 }
