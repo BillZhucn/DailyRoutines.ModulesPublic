@@ -1,9 +1,10 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using DailyRoutines.Abstracts;
 using DailyRoutines.Managers;
+using DailyRoutines.Widgets;
 using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -23,16 +24,20 @@ public class BetterMountRoulette : DailyModuleBase
 
     private static Config ModuleConfig = null!;
 
-    private static LuminaSearcher<Mount>? MasterMountsSearcher;
+    private static LuminaSearcher<Mount>?             MasterMountsSearcher;
+    private static MountListHandler?                  NormalMounts;
+    private static MountListHandler?                  PVPMounts;
+    private static Dictionary<uint, MountListHandler> ZoneMounts = [];
 
-    private static MountListHandler? NormalMounts;
-    private static MountListHandler? PVPMounts;
-
-    private static bool IsNeedToModify;
+    private static ZoneSelectCombo? ZoneSelector;
+    
+    private static HashSet<uint>?   MountsListToUse;
     
     protected override void Init()
     {
         ModuleConfig = LoadConfig<Config>() ?? new();
+
+        ZoneSelector = new ZoneSelectCombo("##BetterMountRouletteZoneSelector");
 
         UseActionManager.RegPreUseAction(OnPreUseAction);
 
@@ -52,29 +57,93 @@ public class BetterMountRoulette : DailyModuleBase
         MasterMountsSearcher = null;
         NormalMounts         = null;
         PVPMounts            = null;
+        ZoneMounts.Clear();
 
-        IsNeedToModify = false;
+        ZoneSelector    = null;
+        MountsListToUse = null;
     }
 
     protected override void ConfigUI()
     {
         if (NormalMounts == null || PVPMounts == null)
             return;
-        
-        using var tabBar = ImRaii.TabBar("##MountTabs");
+
+        using var tabBar = ImRaii.TabBar("##MountTabs", ImGuiTabBarFlags.Reorderable);
         if (!tabBar) return;
-        
+
         DrawTab(GetLoc("General"), NormalMounts);
 
         DrawTab("PVP", PVPMounts);
+
+        DrawZoneTabs();
+
+        HandleNewZoneTabAddition();
     }
 
     private void DrawTab(string tabLabel, MountListHandler handler)
     {
         using var tab = ImRaii.TabItem(tabLabel);
         if (!tab) return;
-        
-        // 搜索框
+
+        DrawSearchAndMountsGrid(tabLabel, handler);
+    }
+    
+    private void DrawZoneTabs()
+    {
+        var zonesToRemove = new List<uint>();
+
+        foreach (var (zoneID, handler) in ZoneMounts)
+        {
+            if (!LuminaGetter.TryGetRow<TerritoryType>(zoneID, out var territory)) continue;
+
+            var zoneName = territory.ExtractPlaceName();
+            if (string.IsNullOrEmpty(zoneName)) continue;
+
+            var pOpen = true;
+            
+            using var id  = ImRaii.PushId((int)zoneID);
+            using var tab = ImRaii.TabItem(zoneName, ref pOpen);
+            if (tab)
+                DrawSearchAndMountsGrid(zoneName, handler);
+
+            if (!pOpen)
+                zonesToRemove.Add(zoneID);
+        }
+
+        foreach (var zoneID in zonesToRemove)
+        {
+            ZoneMounts.Remove(zoneID);
+            ModuleConfig.ZoneRouletteMounts.Remove(zoneID);
+            SaveConfig(ModuleConfig);
+        }
+    }
+
+    private void HandleNewZoneTabAddition()
+    {
+        if (ZoneSelector == null) return;
+
+        if (ImGui.TabItemButton("+", ImGuiTabItemFlags.Trailing | ImGuiTabItemFlags.NoTooltip))
+            ImGui.OpenPopup("AddNewZonePopup");
+
+        using (var popup = ImRaii.Popup("AddNewZonePopup"))
+        {
+            if (popup)
+            {
+                if (ZoneSelector.DrawRadio())
+                {
+                    var newMountSet = new HashSet<uint>();
+                    if (ModuleConfig.ZoneRouletteMounts.TryAdd(ZoneSelector.SelectedZoneID, newMountSet))
+                    {
+                        ZoneMounts[ZoneSelector.SelectedZoneID] = new MountListHandler(MasterMountsSearcher, newMountSet);
+                        SaveConfig(ModuleConfig);
+                    }
+                }
+            }
+        }
+    }
+
+    private void DrawSearchAndMountsGrid(string tabLabel, MountListHandler handler)
+    {
         var searchText = handler.SearchText;
         ImGui.SetNextItemWidth(-1f);
         if (ImGui.InputTextWithHint($"##Search{tabLabel}", GetLoc("Search"), ref searchText, 128))
@@ -83,7 +152,6 @@ public class BetterMountRoulette : DailyModuleBase
             handler.Searcher.Search(searchText);
         }
 
-        // 显示坐骑区域
         var       childSize = new Vector2(ImGui.GetContentRegionAvail().X, 400 * GlobalFontScale);
         using var child     = ImRaii.Child($"##MountsGrid{tabLabel}", childSize, true);
         if (!child) return;
@@ -140,10 +208,10 @@ public class BetterMountRoulette : DailyModuleBase
             }
         }
     }
-    
+
     private static void OnZoneChanged(ushort obj) => 
         OnLogin();
-    
+
     private static unsafe void OnLogin()
     {
         var unlockedMounts = LuminaGetter.Get<Mount>()
@@ -162,6 +230,10 @@ public class BetterMountRoulette : DailyModuleBase
 
         NormalMounts = new(MasterMountsSearcher, ModuleConfig.NormalRouletteMounts);
         PVPMounts    = new(MasterMountsSearcher, ModuleConfig.PVPRouletteMounts);
+
+        ZoneMounts.Clear();
+        foreach (var (zoneID, mountIDs) in ModuleConfig.ZoneRouletteMounts)
+            ZoneMounts[zoneID] = new MountListHandler(MasterMountsSearcher, mountIDs);
     }
 
     private static void OnPreUseAction(
@@ -175,34 +247,42 @@ public class BetterMountRoulette : DailyModuleBase
     {
         if (!DService.Condition[ConditionFlag.Mounted] && actionType == ActionType.GeneralAction && MountRouletteActionIDs.Contains(actionID))
         {
-            var mountList = GameState.IsInPVPArea ? ModuleConfig.PVPRouletteMounts : ModuleConfig.NormalRouletteMounts;
-            if (mountList.Count > 0)
-                IsNeedToModify = true;
+            MountsListToUse = null;
+            var currentZone = GameState.TerritoryType;
+
+            if (ModuleConfig.ZoneRouletteMounts.TryGetValue(currentZone, out var zoneMounts) && zoneMounts.Count > 0)
+                MountsListToUse = zoneMounts;
+            else
+            {
+                MountsListToUse = GameState.IsInPVPArea
+                                      ? ModuleConfig.PVPRouletteMounts
+                                      : ModuleConfig.NormalRouletteMounts;
+            }
         }
 
-        if (IsNeedToModify && actionType == ActionType.Mount)
+        if (MountsListToUse != null && actionType == ActionType.Mount)
         {
             try
             {
-                var mountList = GameState.IsInPVPArea ? ModuleConfig.PVPRouletteMounts : ModuleConfig.NormalRouletteMounts;
-                if (mountList.Count > 0)
+                if (MountsListToUse.Count > 0)
                 {
-                    var mountListAsList = mountList.ToList();
+                    var mountListAsList = MountsListToUse.ToList();
                     var randomMountID   = mountListAsList[Random.Shared.Next(mountListAsList.Count)];
                     actionID = randomMountID;
                 }
             }
             finally
             {
-                IsNeedToModify = false;
+                MountsListToUse = null;
             }
         }
     }
-
+    
     private class Config : ModuleConfiguration
     {
-        public HashSet<uint> NormalRouletteMounts = [];
-        public HashSet<uint> PVPRouletteMounts    = [];
+        public HashSet<uint>                   NormalRouletteMounts = [];
+        public HashSet<uint>                   PVPRouletteMounts    = [];
+        public Dictionary<uint, HashSet<uint>> ZoneRouletteMounts   = [];
     }
 
     private class MountListHandler(LuminaSearcher<Mount> searcher, HashSet<uint> selectedIDs)
@@ -210,7 +290,7 @@ public class BetterMountRoulette : DailyModuleBase
         public LuminaSearcher<Mount> Searcher     { get; }       = searcher;
         public HashSet<uint>         SelectedIDs  { get; }       = selectedIDs;
         public string                SearchText   { get; set; }  = string.Empty;
-        public int                   DisplayCount { get; init; } = searcher.Data.Count;
+        public int                   DisplayCount { get; init; }  = searcher.Data.Count;
     }
 
     #region 数据

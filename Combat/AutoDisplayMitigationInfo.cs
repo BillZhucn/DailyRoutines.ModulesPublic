@@ -63,7 +63,7 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
         DService.UiBuilder.Draw += Draw;
 
         // refresh mitigation status
-        FrameworkManager.Register(OnFrameworkUpdateInterval, throttleMS: 500);
+        FrameworkManager.Reg(OnFrameworkUpdateInterval, throttleMS: 500);
 
         DService.ClientState.TerritoryChanged += OnZoneChangd;
     }
@@ -71,7 +71,7 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
     protected override void Uninit()
     {
         // refresh mitigation status
-        FrameworkManager.Unregister(OnFrameworkUpdateInterval);
+        FrameworkManager.Unreg(OnFrameworkUpdateInterval);
         
         DService.ClientState.TerritoryChanged -= OnZoneChangd;
         OnZoneChangd(0);
@@ -254,6 +254,8 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
     private static void OnZoneChangd(ushort obj)
     {
         MitigationManager.Clear();
+        MitigationManager.PartyMitigationCache.Clear();
+        PartyMemberIndexCache.Clear();
         StatusBarManager.Clear();
     }
     
@@ -770,8 +772,6 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
             LocalActiveStatus.Clear();
             PartyActiveStatus.Clear();
             BattleNPCActiveStatus.Clear();
-            PartyMitigationCache.Clear();
-            PartyMemberIndexCache.Clear();
         }
 
         public static bool IsLocalEmpty() => 
