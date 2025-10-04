@@ -1,3 +1,4 @@
+using System;
 using DailyRoutines.Abstracts;
 using DailyRoutines.Managers;
 using Dalamud.Game.Addon.Lifecycle;
@@ -15,14 +16,14 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
 {
     public override ModuleInfo Info { get; } = new()
     {
-        Title = GetLoc("AutoChocoboRacingTitle"),
-        Description = GetLoc("AutoChocoboRacingDescription"),
-        Category = ModuleCategories.GoldSaucer,
-        Author = ["Bill"],
+        Title               = GetLoc("AutoChocoboRacingTitle"),
+        Description         = GetLoc("AutoChocoboRacingDescription"),
+        Category            = ModuleCategories.GoldSaucer,
+        Author              = ["Bill"],
         ModulesPrerequisite = ["AutoCommenceDuty"]
     };
 
-    public static readonly Dictionary<ushort, string> Routes = new()
+    private static readonly Dictionary<ushort, string> Routes = new()
     {
         { 18, LuminaWrapper.GetContentRouletteName(18) }, // 荒野大道
         { 19, LuminaWrapper.GetContentRouletteName(19) }, // 太阳海岸
@@ -49,33 +50,79 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
 
     protected override void ConfigUI()
     {
-        var notHereditaryOptimised = AbilityHereditary != 58; // 超级冲刺
-        var notLearnedOptimised = AbilityLearned != 30;     // 体力消耗降低III
-        var notRankMax = Rank != 50;                           //满级
-        if (notHereditaryOptimised || notLearnedOptimised || notRankMax)
+        var canRetire = ModuleConfig.StopAtRetireRank && Rank >= 40;
+        
+        var notSuperSprint = AbilityHereditary != 58 && AbilityLearned != 58;           // 超级冲刺
+        var notIncreasedStaminaIII = AbilityHereditary != 30 && AbilityLearned != 30;   // 体力消耗降低III
+        var notRankMax = Rank != 50;                                                    //满级 
+        if (notSuperSprint || notIncreasedStaminaIII || notRankMax)
         {
-            ImGui.Text(GetLoc("AutoChocoboRacing-OptimisedRacingWarning"));
+            ImGui.Text(GetLoc("AutoChocoboRacing-OptimisedAbilityHint"));
 
             var unmet = new List<string>();
-            if (notHereditaryOptimised)
-                unmet.Add(GetLoc($"AutoChocoboRacing-NeedHereditary{LuminaWrapper.GetChocoboRaceAbilityName(58)}"));
-            if (notLearnedOptimised)
-                unmet.Add(GetLoc($"AutoChocoboRacing-NeedLearned{LuminaWrapper.GetChocoboRaceAbilityName(30)}"));
-            if (notRankMax)
-                unmet.Add(GetLoc("AutoChocoboRacing-NeedMaxRank"));
-            
+            if (notSuperSprint)
+                unmet.Add(LuminaWrapper.GetChocoboRaceAbilityName(58));
+            if (notIncreasedStaminaIII)
+                unmet.Add(LuminaWrapper.GetChocoboRaceAbilityName(30));
             ImGui.TextColored(KnownColor.Red.ToVector4(), string.Join(", ", unmet));
+
+            if (notRankMax)
+                ImGui.TextColored(KnownColor.Red.ToVector4(),
+                                  $"{GetLoc("AutoChocoboRacing-NeedMaxRank")}");
+
+            ImGui.TextColored(KnownColor.LightSkyBlue.ToVector4(),
+                              $"{GetLoc("AutoChocoboRacing-StopModeSelection")}:");
+            
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(80f * GlobalFontScale);
+            using (var combo = ImRaii.Combo("##StopMode",
+                                            ModuleConfig.StopAtRetireRank ?
+                                                GetLoc("AutoChocoboRacing-StopAtRetireRank") :
+                                                GetLoc("AutoChocoboRacing-StopAtMaxRank")))
+            {
+                if (combo)
+                {
+                    if (ImGui.Selectable(GetLoc("AutoChocoboRacing-StopAtRetireRank"),
+                                         ModuleConfig.StopAtRetireRank))
+                    {
+                        ModuleConfig.StopAtRetireRank = true;
+                        SaveConfig(ModuleConfig);
+                    }
+                    if (ImGui.Selectable(GetLoc("AutoChocoboRacing-StopAtMaxRank"),
+                                         !ModuleConfig.StopAtRetireRank))
+                    {
+                        ModuleConfig.StopAtRetireRank = false;
+                        SaveConfig(ModuleConfig);
+                    }
+                }
+                
+                if (!notSuperSprint)
+                {
+                    ModuleConfig.StopAtRetireRank = false;
+                    SaveConfig(ModuleConfig);
+                }
+            }
+
+            // 提示可退休
+            if (canRetire)
+            {
+                ImGui.SameLine();
+                ImGui.TextColored(KnownColor.GreenYellow.ToVector4(),
+                                  $"{GetLoc("AutoChocoboRacing-RetireHint")}");
+            }
         }
         else
         {
-            if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-OptimisedRacing"), ref ModuleConfig.OptimisedRacing))
+            // 毕业条件满足，提供毕业跑成就选项
+            if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-OptimisedRacing"),
+                               ref ModuleConfig.OptimisedRacing))
                 SaveConfig(ModuleConfig);
         }
 
         ImGui.NewLine();
 
         ImGui.Text(GetLoc("AutoChocoboRacing-RouteSelection"));
-        using (var combo = ImRaii.Combo("##RouteSelection", 
+        using (var combo = ImRaii.Combo("##RouteSelection",
                                         LuminaWrapper.GetContentRouletteName(ModuleConfig.Route)))
         {
             if (combo)
@@ -93,8 +140,6 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
 
         if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-AutoExit"), ref ModuleConfig.AutoExit))
             SaveConfig(ModuleConfig);
-        if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-StopAtMaxRank"), ref ModuleConfig.StopAtRetireRank))
-            SaveConfig(ModuleConfig);
         if (ImGui.Checkbox(GetLoc("AutoChocoboRacing-AlwaysRun"), ref ModuleConfig.AlwaysRun))
             SaveConfig(ModuleConfig);
 
@@ -103,19 +148,25 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
         if (ImGui.Button(GetLoc(ModuleConfig.IsEnabled ? "Stop" : "Start")))
         {
             ModuleConfig.IsEnabled ^= true;
-            SaveConfig(ModuleConfig);
-
+            
+            if (canRetire && ModuleConfig.IsEnabled)
+            {
+                Chat(GetLoc("AutoChocoboRacing-RetireHint"));
+                ModuleConfig.IsEnabled = false;
+            }
             if (ModuleConfig.IsEnabled)
                 RequestDuty();
             if (!ModuleConfig.IsEnabled && DService.Condition[ConditionFlag.InDutyQueue])
                 CancelDutyApply();
             if (!ModuleConfig.IsEnabled && DService.Condition[ConditionFlag.ChocoboRacing])
             {
-                FrameworkManager.Unregister(OnUpdate);
+                FrameworkManager.Unreg(OnUpdate);
 
                 SetMoving(false);
                 SlowDown(false);
             }
+            
+            SaveConfig(ModuleConfig);
         }
     }
 
@@ -124,24 +175,22 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
 
     private void OnConditionChanged(ConditionFlag flag, bool value)
     {
+        FrameworkManager.Unreg(OnUpdate);
         if (flag != ConditionFlag.ChocoboRacing ||
             !ModuleConfig.IsEnabled) return;
 
         if (value)
-        {
-            FrameworkManager.Unregister(OnUpdate);
-            FrameworkManager.Register(OnUpdate, throttleMS: 1500);
-        }
+            FrameworkManager.Reg(OnUpdate, throttleMS: 1500);
         else
         {
-            FrameworkManager.Unregister(OnUpdate);
-
             SetMoving(false);
             SlowDown(false);
 
-            if (ModuleConfig.StopAtRetireRank && 
-                !ModuleConfig.OptimisedRacing &&
-                Rank >= 40)
+            if (!ModuleConfig.OptimisedRacing &&
+                 // 该退休了
+                ((ModuleConfig.StopAtRetireRank && Rank >= 40) ||
+                 // 毕业预备
+                 (!ModuleConfig.StopAtRetireRank && Rank == 50)))
             {
                 ModuleConfig.IsEnabled = false;
                 SaveConfig(ModuleConfig);
@@ -167,10 +216,7 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
     {
         if (!DService.Condition.Any(ConditionFlag.WaitingForDuty, ConditionFlag.InDutyQueue) &&
             Throttler.Throttle("AutoChocoboRacing-RequestDuty", 1500))
-        
-            // 毕业只跑荒野大道
-            RequestDutyRoulette(ModuleConfig.OptimisedRacing ? 
-                                    (ushort)18 : ModuleConfig.Route, ContentsFinderOption); 
+            RequestDutyRoulette(ModuleConfig.Route, ContentsFinderOption);
     }
 
     private void HandleRacing(AtkUnitBase* raceChocoboParameter)
@@ -178,25 +224,31 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
         var lathered = raceChocoboParameter->GetImageNodeById(3)->IsVisible();
         var stamina = raceChocoboParameter->GetNodeById(5)->GetAsAtkCounterNode()->NodeText.ToString();
         var hasStamina = !string.Equals(stamina, "0.00%");
+        
+        if (ModuleConfig.Route == 18)
+            SendKeypressLongPressAsync(Keys.A, 5000);
 
         SetMoving(ModuleConfig.AlwaysRun || (!lathered && hasStamina));
+        // 不一定更优，但是不会超速）
         SlowDown(!ModuleConfig.AlwaysRun && lathered);
     }
 
     private void OptimisedRacing()
     {
-        SendKeypressLongPressAsync(Keys.A, 5000);
+        if (DService.ObjectTable.LocalPlayer is not { } localPlayer ||
+            localPlayer.StatusList.HasStatus(1058)) return;
         
-        var localPlayer = DService.ObjectTable.LocalPlayer;
-        if (!localPlayer.StatusList.HasStatus(1058))
-            UseActionManager.UseAction(ActionType.ChocoboRaceAbility, 58);
+        if (ModuleConfig.Route == 18)
+            SendKeypressLongPressAsync(Keys.A, 5000);
+        
+        UseActionManager.UseAction(ActionType.ChocoboRaceAbility, 58);
     }
 
     private void SetMoving(bool value)
     {
-        if (value) 
+        if (value)
             SendKeyDown(Keys.W);
-        else 
+        else
             SendKeyUp(Keys.W);
     }
 
@@ -229,7 +281,7 @@ public unsafe class AutoChocoboRacing : DailyModuleBase
         ModuleConfig.IsEnabled = false;
         SaveConfig(ModuleConfig);
 
-        FrameworkManager.Unregister(OnUpdate);
+        FrameworkManager.Unreg(OnUpdate);
         DService.AddonLifecycle.UnregisterListener(OnRaceResult);
         DService.ClientState.Login -= OnLogin;
         DService.Condition.ConditionChange -= OnConditionChanged;
