@@ -165,7 +165,7 @@ public unsafe class AutoDisplayIDInfomation : DailyModuleBase
             case "_TargetInfoMainTarget" or "_TargetInfo":
                 if (DService.Targets.Target is not { } target) return;
 
-                var id = target.DataId;
+                var id = target.DataID;
                 if (id == 0) return;
 
                 var name = AtkStage.Instance()->GetStringArrayData(StringArrayType.Hud2)->StringArray->ExtractText();

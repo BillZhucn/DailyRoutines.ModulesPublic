@@ -260,8 +260,8 @@ public unsafe class OptimizedEnemyList : DailyModuleBase
             var backgroundNode = nodes[i].BackgroundNode;
             var castBarNode    = nodes[i].CastBarNode;
             
-            var gameObj = DService.ObjectTable.SearchById(gameObjectID);
-            if (gameObj is not IBattleChara bc || !HaterInfo.TryGetValue(gameObj.EntityId, out var enmity))
+            var gameObj = DService.ObjectTable.SearchByID(gameObjectID);
+            if (gameObj is not IBattleChara bc || !HaterInfo.TryGetValue(gameObj.EntityID, out var enmity))
             {
                 textNode.SeString        = string.Empty;
                 backgroundNode.IsVisible = false;
@@ -330,7 +330,7 @@ public unsafe class OptimizedEnemyList : DailyModuleBase
             {
                 var castTimeLeft = MathF.Max(bc.TotalCastTime - bc.CurrentCastTime, 0f);
 
-                textNode.SeString        = $"{GetCastInfoText(bc.CastActionType, bc.CastActionId)}: " + (castTimeLeft != 0 ? $"{castTimeLeft:F1}" : "\ue07f\ue07b");
+                textNode.SeString        = $"{GetCastInfoText(bc.CastActionType, bc.CastActionID)}: " + (castTimeLeft != 0 ? $"{castTimeLeft:F1}" : "\ue07f\ue07b");
                 backgroundNode.IsVisible = true;
             }            
             else if (!bc.IsTargetable && bc.CurrentHp == bc.MaxHp)

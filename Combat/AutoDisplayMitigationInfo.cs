@@ -60,7 +60,7 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
         Task.Run(async () => await RemoteRepoManager.FetchMitigationStatuses());
 
         // draw on party list
-        DService.UiBuilder.Draw += Draw;
+        DService.UIBuilder.Draw += Draw;
 
         // refresh mitigation status
         FrameworkManager.Reg(OnFrameworkUpdateInterval, throttleMS: 500);
@@ -77,7 +77,7 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
         OnZoneChangd(0);
 
         // draw on party list
-        DService.UiBuilder.Draw -= Draw;
+        DService.UIBuilder.Draw -= Draw;
 
         // status bar
         StatusBarManager.Disable();
@@ -589,7 +589,7 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
                     if (member.ObjectId == 0)
                         continue;
 
-                    if (DService.ObjectTable.SearchById(member.ObjectId) is ICharacter memberChara)
+                    if (DService.ObjectTable.SearchByID(member.ObjectId) is ICharacter memberChara)
                         partyShield[member.ObjectId] = ((float)memberChara.ShieldPercentage / 100 * memberChara.CurrentHp);
                 }
 
@@ -682,9 +682,9 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
                         mitigation.Info.Physical = mitValue;
                         break;
                     }
-                    case 1174 when DService.ObjectTable.SearchById(targetID) is IBattleChara sourceChara:
+                    case 1174 when DService.ObjectTable.SearchByID(targetID) is IBattleChara sourceChara:
                     {
-                        var sourceStatusIds = sourceChara.StatusList.Select(x => x.StatusId).ToHashSet();
+                        var sourceStatusIds = sourceChara.StatusList.Select(x => x.StatusID).ToHashSet();
                         var mitValue        = sourceStatusIds.Contains(1191) || sourceStatusIds.Contains(3829) ? 20 : 10;
                         mitigation.Info.Magical  = mitValue;
                         mitigation.Info.Physical = mitValue;
@@ -741,7 +741,7 @@ public class AutoDisplayMitigationInfo : DailyModuleBase
 
             // battle npc
             var currentTarget = DService.Targets.Target;
-            if (currentTarget is IBattleNpc battleNpc)
+            if (currentTarget is IBattleNPC battleNpc)
             {
                 var statusList = battleNpc.ToBCStruct()->StatusManager.Status;
                 foreach (var status in statusList)

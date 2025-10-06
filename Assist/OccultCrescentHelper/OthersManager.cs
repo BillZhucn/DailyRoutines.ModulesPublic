@@ -304,7 +304,7 @@ public partial class OccultCrescentHelper
                     foreach (var plugin in pluginsNames)
                     {
                         if (string.IsNullOrWhiteSpace(plugin)) continue;
-                        if (!IPCManager.IsPluginEnabled(plugin)) continue;
+                        if (!IsPluginEnabled(plugin)) continue;
 
                         ChatHelper.SendMessage($"/xldisableplugin {plugin}");
                     }
@@ -350,7 +350,7 @@ public partial class OccultCrescentHelper
                 foreach (var plugin in pluginsNames)
                 {
                     if (string.IsNullOrWhiteSpace(plugin)) continue;
-                    if (IPCManager.IsPluginEnabled(plugin)) continue;
+                    if (IsPluginEnabled(plugin)) continue;
 
                     ChatHelper.SendMessage($"/xlenableplugin {plugin}");
                 }

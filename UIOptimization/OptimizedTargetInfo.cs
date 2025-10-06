@@ -379,7 +379,7 @@ public unsafe class OptimizedTargetInfo : DailyModuleBase
                     
                     var gameObjectIDOffset = 2 + (5 * (10 - i));
                     var gameObjectID       = (ulong)AtkStage.Instance()->GetNumberArrayData(NumberArrayType.CastBarEnemy)->IntArray[gameObjectIDOffset];
-                    if (gameObjectID == 0 || DService.ObjectTable.SearchById(gameObjectID) is not IBattleChara target) continue;
+                    if (gameObjectID == 0 || DService.ObjectTable.SearchByID(gameObjectID) is not IBattleChara target) continue;
                     
                     var leftCastTime = target.TotalCastTime - target.CurrentCastTime;
                     
@@ -465,7 +465,7 @@ public unsafe class OptimizedTargetInfo : DailyModuleBase
                 var playerStatusCount = 0;
                 for (var i = 0; i < 30; i++)
                 {
-                    if (target.StatusList[i].SourceId == LocalPlayerState.EntityID)
+                    if (target.StatusList[i].SourceID == LocalPlayerState.EntityID)
                         playerStatusCount++;
                 }
 
@@ -667,7 +667,7 @@ public unsafe class OptimizedTargetInfo : DailyModuleBase
                 var playerStatusCount = 0;
                 for (var i = 0; i < 30; i++)
                 {
-                    if (target.StatusList[i].SourceId == LocalPlayerState.EntityID)
+                    if (target.StatusList[i].SourceID == LocalPlayerState.EntityID)
                         playerStatusCount++;
                 }
 

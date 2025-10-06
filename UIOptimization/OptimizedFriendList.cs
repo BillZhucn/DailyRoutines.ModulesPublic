@@ -877,8 +877,8 @@ public unsafe class OptimizedFriendList : DailyModuleBase
             if (zoneID == GameState.TerritoryType) return false;
             
             aetheryteID = DService.AetheryteList
-                                  .Where(aetheryte => aetheryte.TerritoryId == zoneID)
-                                  .Select(aetheryte => aetheryte.AetheryteId)
+                                  .Where(aetheryte => aetheryte.TerritoryID == zoneID)
+                                  .Select(aetheryte => aetheryte.AetheryteID)
                                   .FirstOrDefault();
 
             return aetheryteID > 0;

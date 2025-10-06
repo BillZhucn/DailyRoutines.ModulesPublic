@@ -214,7 +214,7 @@ public unsafe class AutoHighlightStatusAction : DailyModuleBase
 
         // status on current target
         var currentTarget = DService.Targets.Target;
-        if (currentTarget is IBattleNpc { IsDead: false } battleNpc)
+        if (currentTarget is IBattleNPC { IsDead: false } battleNpc)
         {
             foreach (var status in battleNpc.ToBCStruct()->StatusManager.Status)
             {
@@ -225,7 +225,7 @@ public unsafe class AutoHighlightStatusAction : DailyModuleBase
 
                 foreach (var action in statusConfig.BindActions)
                     actionToHighlight[action] = (status.RemainingTime, statusConfig.Countdown);
-                LastStatusTarget[status.StatusId] = battleNpc.EntityId;
+                LastStatusTarget[status.StatusId] = battleNpc.EntityID;
             }
         }
 

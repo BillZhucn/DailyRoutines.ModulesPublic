@@ -84,7 +84,7 @@ public class AutoRetarget : DailyModuleBase
                               ? $"{igo.Name}@{ipc.HomeWorld.ValueNullable?.Name}"
                               : igo.Name.ToString();
 
-            if (ModuleConfig.PrioritizeForlorn && igo is IBattleNpc ibn && (ibn.NameId == 6737 || ibn.NameId == 6738))
+            if (ModuleConfig.PrioritizeForlorn && igo is IBattleNPC ibn && (ibn.NameID == 6737 || ibn.NameID == 6738))
             {
                 found.Insert(0, igo);
                 break;
@@ -97,7 +97,7 @@ public class AutoRetarget : DailyModuleBase
         if (found.Count != 0)
         {
             var igo = found.First();
-            if (igo is IBattleNpc ibn && (ibn.NameId == 6737 || ibn.NameId == 6738)) 
+            if (igo is IBattleNPC ibn && (ibn.NameID == 6737 || ibn.NameID == 6738)) 
                 DService.Targets.Target = igo;
             else 
                 DService.Targets.Target ??= igo;

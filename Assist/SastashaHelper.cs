@@ -59,7 +59,7 @@ public class SastashaHelper : DailyModuleBase
         if (CorrectCoralDataID == 0 || CorrectCoralHighlightColor == ObjectHighlightColor.None) return;
 
         var coral = DService.ObjectTable.FirstOrDefault(
-            x => x.ObjectKind == ObjectKind.EventObj && x.DataId == CorrectCoralDataID);
+            x => x.ObjectKind == ObjectKind.EventObj && x.DataID == CorrectCoralDataID);
         if (coral == null) return;
 
         coral.ToStruct()->Highlight(coral.IsTargetable ? CorrectCoralHighlightColor : ObjectHighlightColor.None);
@@ -71,10 +71,10 @@ public class SastashaHelper : DailyModuleBase
         
         var book = DService.ObjectTable
                            .FirstOrDefault(x => x.IsTargetable && x.ObjectKind == ObjectKind.EventObj && 
-                                                BookToCoral.ContainsKey(x.DataId));
+                                                BookToCoral.ContainsKey(x.DataID));
         if (book == null) return false;
 
-        var info = BookToCoral[book.DataId];
+        var info = BookToCoral[book.DataID];
 
         Chat(GetSLoc("SastashaHelper-Message",
                      new SeStringBuilder()

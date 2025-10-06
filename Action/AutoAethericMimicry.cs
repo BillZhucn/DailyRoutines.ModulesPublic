@@ -89,7 +89,7 @@ public class AutoAethericMimicry : DailyModuleBase
                 OnClick = () =>
                 {
                     if (TryGetChara([1], out var chara))
-                        UseActionManager.UseActionLocation(ActionType.Action, 18322, chara.EntityId);
+                        UseActionManager.UseActionLocation(ActionType.Action, 18322, chara.EntityID);
                     
                     Notify(chara);
                     Addon.Close();
@@ -107,7 +107,7 @@ public class AutoAethericMimicry : DailyModuleBase
                 OnClick = () =>
                 {
                     if (TryGetChara([4], out var chara))
-                        UseActionManager.UseActionLocation(ActionType.Action, 18322, chara.EntityId);
+                        UseActionManager.UseActionLocation(ActionType.Action, 18322, chara.EntityID);
                     
                     Notify(chara);
                     Addon.Close();
@@ -125,7 +125,7 @@ public class AutoAethericMimicry : DailyModuleBase
                 OnClick = () =>
                 {
                     if (TryGetChara([2, 3], out var chara))
-                        UseActionManager.UseActionLocation(ActionType.Action, 18322, chara.EntityId);
+                        UseActionManager.UseActionLocation(ActionType.Action, 18322, chara.EntityID);
                     
                     Notify(chara);
                     Addon.Close();
@@ -165,7 +165,7 @@ public class AutoAethericMimicry : DailyModuleBase
 
             chara = DService.ObjectTable
                             .Where(x => x is IPlayerCharacter player                 &&
-                                        player.EntityId != LocalPlayerState.EntityID &&
+                                        player.EntityID != LocalPlayerState.EntityID &&
                                         roles.Contains(player.ClassJob.Value.Role))
                             .Where(x => x is { YalmDistanceX: <= 25, YalmDistanceZ: <= 25 })
                             .OrderBy(x => x.YalmDistanceX + x.YalmDistanceZ)

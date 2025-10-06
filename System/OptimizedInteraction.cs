@@ -163,7 +163,7 @@ public unsafe class OptimizedInteraction : DailyModuleBase
         
         // 以太之光
         if (obj->ObjectKind is ObjectKind.Aetheryte &&
-            EventFrameworkHelper.TryGetNearestEventID(x => x.EventId.ContentId is EventHandlerContent.Aetheryte,
+            TryGetNearestEventID(x => x.EventId.ContentId is EventHandlerContent.Aetheryte,
                                                       x => x.NameString == obj->NameString,
                                                       localPlayer.Position, out var eventIDAetheryte) &&
             FirstQuest.Any(x => UIState.Instance()->IsUnlockLinkUnlockedOrQuestCompleted(x)))
@@ -181,7 +181,7 @@ public unsafe class OptimizedInteraction : DailyModuleBase
                 DismountAndSend(info.EventId.Id);
                 return 1;
             }
-            else if (EventFrameworkHelper.TryGetNearestEventID(_ => true, x => x.NameString == obj->NameString,
+            else if (TryGetNearestEventID(_ => true, x => x.NameString == obj->NameString,
                                                                localPlayer.Position, out var eventIDWhitelist))
             {
                 DismountAndSend(eventIDWhitelist);
@@ -198,7 +198,7 @@ public unsafe class OptimizedInteraction : DailyModuleBase
             {
                 if (MovementManager.IsManagerBusy || DService.Condition[ConditionFlag.Mounted] ||
                     DService.Condition[ConditionFlag.Jumping]) return false;
-                new EventStartPackt(localPlayer.GameObjectId, eventID).Send();
+                new EventStartPackt(localPlayer.GameObjectID, eventID).Send();
                 return true;
             });
         }

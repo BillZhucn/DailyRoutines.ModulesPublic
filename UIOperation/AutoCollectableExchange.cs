@@ -96,7 +96,7 @@ public unsafe class AutoCollectableExchange : DailyModuleBase
                 });
                 TaskHelper.Enqueue(() => !OccupiedInEvent);
                 TaskHelper.Enqueue(() => GamePacketManager.SendPackt(
-                                       new EventStartPackt(DService.ObjectTable.LocalPlayer.GameObjectId,
+                                       new EventStartPackt(DService.ObjectTable.LocalPlayer.GameObjectID,
                                                            GetScriptEventID(DService.ClientState.TerritoryType))));
             }
         }

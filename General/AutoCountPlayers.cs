@@ -61,7 +61,7 @@ public unsafe class AutoCountPlayers : DailyModuleBase
         Entry.Shown = true;
         Entry.OnClick += _ => Overlay.IsOpen ^= true;
 
-        DService.UiBuilder.Draw += OnDraw;
+        DService.UIBuilder.Draw += OnDraw;
 
         PlayersManager.ReceivePlayersAround += OnUpdate;
         PlayersManager.ReceivePlayersTargetingMe += OnPlayersTargetingMeUpdate;
@@ -124,7 +124,7 @@ public unsafe class AutoCountPlayers : DailyModuleBase
         
         foreach (var playerAround in source)
         {
-            using var id = ImRaii.PushId($"{playerAround.GameObjectId}");
+            using var id = ImRaii.PushId($"{playerAround.GameObjectID}");
             if (ImGuiOm.ButtonIcon("定位", FontAwesomeIcon.Flag, GetLoc("Locate")))
             {
                 var mapPos = WorldToMap(playerAround.Position.ToVector2(), GameState.MapData);
@@ -279,7 +279,7 @@ public unsafe class AutoCountPlayers : DailyModuleBase
             (GameState.ContentFinderCondition == 0 || DService.PartyList.Length < 2))
         {
             var newTargetingPlayers = targetingPlayersInfo.Where(info => info.IsNew).ToList();
-            if (newTargetingPlayers.Any(info => Throttler.Throttle($"AutoCountPlayers-Player-{info.Player.EntityId}", 30_000)))
+            if (newTargetingPlayers.Any(info => Throttler.Throttle($"AutoCountPlayers-Player-{info.Player.EntityID}", 30_000)))
             {
                 if (ModuleConfig.SendTTS)
                     Speak(GetLoc("AutoCountPlayers-Notification-SomeoneTargetingMe"));
@@ -330,7 +330,7 @@ public unsafe class AutoCountPlayers : DailyModuleBase
         drawList.AddCircleFilled(endPos,   12f, DotColor);
         
         ImGui.SetNextWindowPos(endPos);
-        if (ImGui.Begin($"AutoCountPlayers-{chara.EntityId}", WindowFlags))
+        if (ImGui.Begin($"AutoCountPlayers-{chara.EntityID}", WindowFlags))
         {
             using (ImRaii.Group())
             {
@@ -353,7 +353,7 @@ public unsafe class AutoCountPlayers : DailyModuleBase
     {
         FrameworkManager.Unreg(OnFrameworkUpdate);
         
-        DService.UiBuilder.Draw -= OnDraw;
+        DService.UIBuilder.Draw -= OnDraw;
         PlayersManager.ReceivePlayersAround -= OnUpdate;
         PlayersManager.ReceivePlayersTargetingMe -= OnPlayersTargetingMeUpdate;
         

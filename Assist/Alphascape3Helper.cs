@@ -45,10 +45,10 @@ public unsafe class Alphascape3Helper : DailyModuleBase
 
         if (Control.GetLocalPlayer() == null) return;
         
-        var obj = DService.ObjectTable.FirstOrDefault(x => x.ObjectKind == ObjectKind.BattleNpc && x.DataId == 9638);
+        var obj = DService.ObjectTable.FirstOrDefault(x => x.ObjectKind == ObjectKind.BattleNpc && x.DataID == 9638);
         if (obj == null || !obj.IsTargetable) return;
 
-        new UseActionPacket(ActionType.Action, 12911, obj.EntityId, Control.GetLocalPlayer()->Rotation).Send();
+        new UseActionPacket(ActionType.Action, 12911, obj.EntityID, Control.GetLocalPlayer()->Rotation).Send();
     }
 
     protected override void Uninit()

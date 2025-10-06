@@ -20,10 +20,10 @@ public unsafe class MarkerInPartyList : DailyModuleBase
 {
     public override ModuleInfo Info { get; } = new()
     {
-        Title = GetLoc("MarkerInPartyListTitle"),
+        Title       = GetLoc("MarkerInPartyListTitle"),
         Description = GetLoc("MarkerInPartyListDescription"),
-        Category = ModuleCategories.Combat,
-        Author = ["status102"]
+        Category    = ModuleCategories.Combat,
+        Author      = ["status102"]
     };
 
     private const int DefaultIconID = 61201;
@@ -408,7 +408,7 @@ public unsafe class MarkerInPartyList : DailyModuleBase
 
         if (InfoProxyCrossRealm.Instance()->IsCrossRealm)
         {
-            var myGroup      = InfoProxyCrossRealm.GetMemberByEntityId((uint)DService.ObjectTable.LocalPlayer!.GameObjectId);
+            var myGroup      = InfoProxyCrossRealm.GetMemberByEntityId((uint)DService.ObjectTable.LocalPlayer!.GameObjectID);
             var pGroupMember = InfoProxyCrossRealm.GetMemberByEntityId(entityID);
             if (myGroup is not null && pGroupMember is not null && pGroupMember->GroupIndex == myGroup->GroupIndex)
             {

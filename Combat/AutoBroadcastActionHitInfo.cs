@@ -190,7 +190,7 @@ public unsafe class AutoBroadcastActionHitInfo : DailyModuleBase
             if (targets < 1) return;
 
             if (DService.ObjectTable.LocalPlayer is not { } localPlayer) return;
-            if (localPlayer.EntityId != sourceEntityID) return;
+            if (localPlayer.EntityID != sourceEntityID) return;
 
             var actionID   = effectHeader->ActionId;
             var actionData = LuminaGetter.GetRow<Action>(actionID);

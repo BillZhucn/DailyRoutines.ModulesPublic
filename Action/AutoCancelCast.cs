@@ -54,8 +54,8 @@ public unsafe class AutoCancelCast : DailyModuleBase
 
         var player = DService.ObjectTable.LocalPlayer;
         if (player.CastActionType != ActionType.Action      ||
-            TargetAreaActions.Contains(player.CastActionId) ||
-            !LuminaGetter.TryGetRow(player.CastActionId, out LuminaAction actionRow))
+            TargetAreaActions.Contains(player.CastActionID) ||
+            !LuminaGetter.TryGetRow(player.CastActionID, out LuminaAction actionRow))
         {
             IsOnCasting = false;
             return;
@@ -70,7 +70,7 @@ public unsafe class AutoCancelCast : DailyModuleBase
             return;
         }
         
-        if (ActionManager.CanUseActionOnTarget(player.CastActionId, obj.ToStruct()))
+        if (ActionManager.CanUseActionOnTarget(player.CastActionID, obj.ToStruct()))
             return;
         
         ExecuteCancast();

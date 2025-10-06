@@ -161,7 +161,7 @@ public unsafe class AutoPreventDuplicateStatus : DailyModuleBase
         if (adjustedActionID == 7535)
             canTargetSelf = false;
 
-        var gameObj = DService.ObjectTable.SearchById(targetID);
+        var gameObj = DService.ObjectTable.SearchByID(targetID);
 
         var targetIDDetection = targetID;
         if (canTargetSelf && (gameObj == null || !ActionManager.CanUseActionOnTarget(adjustedActionID, gameObj.ToStruct())))

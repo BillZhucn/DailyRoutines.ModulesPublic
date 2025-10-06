@@ -135,7 +135,7 @@ public unsafe class AutoExpertDelivery : DailyModuleBase
             return false;
         });
 
-        TaskHelper.Enqueue(() => new EventStartPackt(DService.ObjectTable.LocalPlayer.GameObjectId, info.EventID).Send());
+        TaskHelper.Enqueue(() => new EventStartPackt(DService.ObjectTable.LocalPlayer.GameObjectID, info.EventID).Send());
         TaskHelper.Enqueue(() => IsAddonAndNodesReady(GrandCompanyExchange));
 
         if (isAutoExchange && ModuleManager.IsModuleEnabled(typeof(FastGrandCompanyExchange)))
@@ -151,7 +151,7 @@ public unsafe class AutoExpertDelivery : DailyModuleBase
         {
             TaskHelper.Enqueue(() => !IsAddonAndNodesReady(GrandCompanyExchange) && !OccupiedInEvent);
             TaskHelper.Enqueue(() => DService.ObjectTable
-                                             .FirstOrDefault(x => x.ObjectKind == ObjectKind.EventNpc && x.DataId == info.DataID)
+                                             .FirstOrDefault(x => x.ObjectKind == ObjectKind.EventNpc && x.DataID == info.DataID)
                                              .TargetInteract());
             TaskHelper.Enqueue(() => ClickSelectString(0));
             if (isAutoExchange)

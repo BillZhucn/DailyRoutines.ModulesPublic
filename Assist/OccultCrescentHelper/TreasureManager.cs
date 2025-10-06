@@ -48,7 +48,7 @@ public partial class OccultCrescentHelper
         {
             TreasureTaskHelper ??= new() { TimeLimitMS = 180_000 };
             
-            DService.UiBuilder.Draw               += OnPosDraw;
+            DService.UIBuilder.Draw               += OnPosDraw;
             DService.ClientState.TerritoryChanged += OnZoneChanged;
             
             GamePacketManager.RegPreSendPacket(OnPreSendPacket);
@@ -187,7 +187,7 @@ public partial class OccultCrescentHelper
             GamePacketManager.Unreg(OnPreSendPacket);
             
             DService.ClientState.TerritoryChanged -= OnZoneChanged;
-            DService.UiBuilder.Draw               -= OnPosDraw;
+            DService.UIBuilder.Draw               -= OnPosDraw;
             
             TreasureTaskHelper?.Abort();
             TreasureTaskHelper?.Dispose();
@@ -516,7 +516,7 @@ public partial class OccultCrescentHelper
             if (DService.ObjectTable.LocalPlayer is not { } localPlayer) return;
             
             PositionUpdateInstancePacket.Send(localPlayer.Rotation, obj.Position);
-            new TreasureOpenPacket(obj.EntityId).Send();
+            new TreasureOpenPacket(obj.EntityID).Send();
             PositionUpdateInstancePacket.Send(localPlayer.Rotation, localPlayer.Position);
         }
 
@@ -540,7 +540,7 @@ public partial class OccultCrescentHelper
                         case ObjectKind.Treasure:
                             break;
                         case ObjectKind.EventObj:
-                            switch (gameObject.EntityId)
+                            switch (gameObject.EntityID)
                             {
                                 case (uint)SpecialObjectType.SurveyPoint:
                                     type = SpecialObjectType.SurveyPoint;
@@ -556,7 +556,7 @@ public partial class OccultCrescentHelper
                             return null;
                     }
                     
-                    return new(type, gameObject.EntityId, gameObject.Name.ExtractText(), gameObject.Position);
+                    return new(type, gameObject.EntityID, gameObject.Name.ExtractText(), gameObject.Position);
                 }
                 catch
                 {
@@ -565,7 +565,7 @@ public partial class OccultCrescentHelper
             }
             
             public IGameObject? GetGameObject() => 
-                DService.ObjectTable.SearchByEntityId(EntityID);
+                DService.ObjectTable.SearchByEntityID(EntityID);
         }
 
         public class TreasureHuntPoint(float x, float y, float z, bool isExact = false)

@@ -149,13 +149,13 @@ public partial class OccultCrescentHelper
             if (aetheryte.TeleportTo()) return;
 
             // 附近可以找到魔路
-            if (EventFrameworkHelper.TryGetNearestEvent(x => x.EventId.ContentId == EventHandlerContent.CustomTalk,
+            if (TryGetNearestEvent(x => x.EventId.ContentId == EventHandlerContent.CustomTalk,
                                                         x => x.NameString.Equals(LuminaWrapper.GetEObjName(2006473), StringComparison.OrdinalIgnoreCase) ||
                                                              x.NameString.Equals(LuminaWrapper.GetEObjName(2014664), StringComparison.OrdinalIgnoreCase),
                                                         default,
                                                         out var eventID,
                                                         out var eventObjectID) &&
-                DService.ObjectTable.SearchById(eventObjectID) is { } targetObj)
+                DService.ObjectTable.SearchByID(eventObjectID) is { } targetObj)
             {
                 var distance3D = LocalPlayerState.DistanceTo3D(targetObj.Position);
 
@@ -178,7 +178,7 @@ public partial class OccultCrescentHelper
 
                 // 启用了绿玩移动
                 if (ModuleConfig.IsEnabledMoveToAetheryte    &&
-                    IPCManager.IsIPCAvailable<vnavmeshIPC>() &&
+                    IsPluginEnabled(vnavmeshIPC.InternalName) &&
                     distance3D <= ModuleConfig.DistanceToMoveToAetheryte)
                 {
                     MoveTaskHelper.Abort();
@@ -242,7 +242,7 @@ public partial class OccultCrescentHelper
 
             // 先回去 然后重复一次这个流程
             if (ModuleConfig.IsEnabledMoveToAetheryte &&
-                IPCManager.IsIPCAvailable<vnavmeshIPC>())
+                IsPluginEnabled(vnavmeshIPC.InternalName))
             {
                 MoveTaskHelper.Enqueue(() => UseActionManager.UseActionLocation(ActionType.Action, 41343));
                 MoveTaskHelper.Enqueue(() => IsScreenReady() && LocalPlayerState.DistanceTo3D(CrescentAetheryte.ExpeditionBaseCamp.Position) <= 100);

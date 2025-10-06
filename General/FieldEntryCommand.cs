@@ -167,7 +167,7 @@ public class FieldEntryCommand : DailyModuleBase
         {
             TPHelper.Enqueue(() =>
             {
-                if (!EventFrameworkHelper.IsEventIDNearby(721694))
+                if (!IsEventIDNearby(721694))
                 {
                     TPHelper.Enqueue(() => MovementManager.TPSmart_InZone(LowerLaNosceaDefaultPosition), weight: 2);
                     TPHelper.Enqueue(() => GameState.TerritoryType == 135  && IsScreenReady() &&
@@ -180,7 +180,7 @@ public class FieldEntryCommand : DailyModuleBase
             {
                 if (DService.ObjectTable.LocalPlayer is not { } localPlayer) return false;
 
-                GamePacketManager.SendPackt(new EventStartPackt(localPlayer.GameObjectId, 721694));
+                GamePacketManager.SendPackt(new EventStartPackt(localPlayer.GameObjectID, 721694));
                 return true;
             });
 
@@ -252,7 +252,7 @@ public class FieldEntryCommand : DailyModuleBase
         {
             TPHelper.Enqueue(() =>
             {
-                if (!EventFrameworkHelper.IsEventIDNearby(721355))
+                if (!IsEventIDNearby(721355))
                 {
                     TPHelper.Enqueue(() => MovementManager.TPSmart_InZone(KuganeDefaultPosition), weight: 2);
                     TPHelper.Enqueue(() => GameState.TerritoryType == 628  && IsScreenReady() &&
@@ -266,7 +266,7 @@ public class FieldEntryCommand : DailyModuleBase
             {
                 if (DService.ObjectTable.LocalPlayer is not { } localPlayer) return false;
 
-                GamePacketManager.SendPackt(new EventStartPackt(localPlayer.GameObjectId, 721355));
+                GamePacketManager.SendPackt(new EventStartPackt(localPlayer.GameObjectID, 721355));
                 return true;
             });
 
@@ -299,7 +299,7 @@ public class FieldEntryCommand : DailyModuleBase
         {
             TPHelper.Enqueue(() =>
             {
-                if (!EventFrameworkHelper.IsEventIDNearby(721601))
+                if (!IsEventIDNearby(721601))
                 {
                     TPHelper.Enqueue(() => MovementManager.TPSmart_InZone(GangosDefaultPosition), weight: 2);
                     TPHelper.Enqueue(() => GameState.TerritoryType == 915  && IsScreenReady() &&
@@ -312,7 +312,7 @@ public class FieldEntryCommand : DailyModuleBase
             {
                 if (DService.ObjectTable.LocalPlayer is not { } localPlayer) return false;
 
-                GamePacketManager.SendPackt(new EventStartPackt(localPlayer.GameObjectId, 721601));
+                GamePacketManager.SendPackt(new EventStartPackt(localPlayer.GameObjectID, 721601));
                 return true;
             });
 
@@ -343,7 +343,7 @@ public class FieldEntryCommand : DailyModuleBase
         {
             TPHelper.Enqueue(() =>
             {
-                if (!EventFrameworkHelper.IsEventIDNearby(327855))
+                if (!IsEventIDNearby(327855))
                 {
                     TPHelper.Enqueue(() => MovementManager.TPSmart_InZone(CosmicDefaultPosition), weight: 2);
                     TPHelper.Enqueue(() => GameState.TerritoryType == 959  && IsScreenReady() &&
@@ -366,7 +366,7 @@ public class FieldEntryCommand : DailyModuleBase
             TPHelper.Enqueue(() => GameState.TerritoryType == 1278 && !DService.Condition[ConditionFlag.Jumping] && !MovementManager.IsManagerBusy);
             TPHelper.Enqueue(() =>
             {
-                if (!EventFrameworkHelper.IsEventIDNearby(721825))
+                if (!IsEventIDNearby(721825))
                 {
                     TPHelper.Enqueue(() => MovementManager.TPSmart_InZone(PhantomVillagePosition), weight: 2);
                     TPHelper.Enqueue(() => GameState.TerritoryType == 1278 && !DService.Condition[ConditionFlag.Jumping] && !MovementManager.IsManagerBusy, 
@@ -392,7 +392,7 @@ public class FieldEntryCommand : DailyModuleBase
         
         TPHelper.Enqueue(() =>
         {
-            if (!EventFrameworkHelper.IsEventIDNearby(131592))
+            if (!IsEventIDNearby(131592))
             {
                 TPHelper.Enqueue(() => MovementManager.TPSmart_InZone(TuliyollalPhantomVillageEntryPosition),                                           weight: 2);
                 TPHelper.Enqueue(() => GameState.TerritoryType == 1185 && !DService.Condition[ConditionFlag.Jumping] && !MovementManager.IsManagerBusy, weight: 2);
@@ -408,7 +408,7 @@ public class FieldEntryCommand : DailyModuleBase
         TPHelper.Enqueue(() => GameState.TerritoryType == 1278 && LocalPlayerState.Object != null);
         TPHelper.Enqueue(() =>
         {
-            if (!EventFrameworkHelper.IsEventIDNearby(721825))
+            if (!IsEventIDNearby(721825))
             {
                 TPHelper.Enqueue(() => MovementManager.TPSmart_InZone(PhantomVillagePosition),                                                          weight: 2);
                 TPHelper.Enqueue(() => GameState.TerritoryType == 1278 && !DService.Condition[ConditionFlag.Jumping] && !MovementManager.IsManagerBusy, weight: 2);

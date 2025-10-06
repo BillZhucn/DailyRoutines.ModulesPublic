@@ -1031,7 +1031,7 @@ public class HealerHelper : DailyModuleBase
             var localStatus = DService.ObjectTable.LocalPlayer.StatusList;
             foreach (var status in localStatus)
             {
-                if (PresetSheet.DispellableStatuses.ContainsKey(status.StatusId))
+                if (PresetSheet.DispellableStatuses.ContainsKey(status.StatusID))
                     return LocalPlayerState.EntityID;
             }
 
@@ -1086,13 +1086,13 @@ public class HealerHelper : DailyModuleBase
 
         public static unsafe bool IsHealable(IGameObject? gameObject)
         {
-            var battleChara = CharacterManager.Instance()->LookupBattleCharaByEntityId(gameObject.EntityId);
+            var battleChara = CharacterManager.Instance()->LookupBattleCharaByEntityId(gameObject.EntityID);
             return battleChara is not null && ActionManager.CanUseActionOnTarget(3595, (GameObject*)battleChara);
         }
 
         public void OnPreHeal(ref ulong targetID, ref uint actionID, ref bool isPrevented)
         {
-            var currentTarget = DService.ObjectTable.SearchById(targetID);
+            var currentTarget = DService.ObjectTable.SearchByID(targetID);
             if (targetID == UnspecificTargetID || !IsHealable(currentTarget))
             {
                 // find the target with the lowest HP ratio within range and satisfy the threshold
@@ -1143,8 +1143,8 @@ public class HealerHelper : DailyModuleBase
 
         public void OnPreDispel(ref ulong targetID, ref bool isPrevented)
         {
-            var currentTarget = DService.ObjectTable.SearchById(targetID);
-            if (currentTarget is IBattleNpc || targetID == UnspecificTargetID)
+            var currentTarget = DService.ObjectTable.SearchByID(targetID);
+            if (currentTarget is IBattleNPC || targetID == UnspecificTargetID)
             {
                 // find target with dispellable status within range
                 targetID = TargetNeedDispel(config.DispelOrder is DispelOrderStatus.Reverse);
@@ -1172,8 +1172,8 @@ public class HealerHelper : DailyModuleBase
 
         public void OnPreRaise(ref ulong targetID, ref uint actionID, ref bool isPrevented)
         {
-            var currentTarget = DService.ObjectTable.SearchById(targetID);
-            if (currentTarget is IBattleNpc || targetID == UnspecificTargetID)
+            var currentTarget = DService.ObjectTable.SearchByID(targetID);
+            if (currentTarget is IBattleNPC || targetID == UnspecificTargetID)
             {
                 // find target with dead status within range
                 targetID = TargetNeedRaise(actionID, config.RaiseOrder is RaiseOrderStatus.Reverse);

@@ -112,7 +112,7 @@ public unsafe class AutoCountBlacklisted : DailyModuleBase
                 if (!PresetSheet.Worlds.TryGetValue(chara.HomeWorld.RowId, out var world)) continue;
 
                 // Character.Id = accountId for new, contentId for old
-                if (BlacklistHashSet.Contains(chara.ContentId) || BlacklistHashSet.Contains(chara.AccountId))
+                if (BlacklistHashSet.Contains(chara.ContentID) || BlacklistHashSet.Contains(chara.AccountID))
                 {
                     tooltip.AppendLine($"{obj.Name}@{world.Name.ToString()}");
                     blackNum++;
